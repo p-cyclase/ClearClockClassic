@@ -1,18 +1,5 @@
-# JavaScript dependencies and generated files
-node_modules/
-dist/
-
-# Tauri / Rust build output
-src-tauri/target/
-
-# Local editor and operating-system files
-.DS_Store
-Thumbs.db
-.vscode/
-.idea/
-
-# Local application settings
-*.local
-.env
-.env.*
-!.env.example
+release/
+.build/
+.vs/
+*.user
+*.suo

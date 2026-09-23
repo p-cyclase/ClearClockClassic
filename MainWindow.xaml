@@ -1,0 +1,38 @@
+<Window x:Class="ClearClock.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ClearClock"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        Topmost="True"
+        Loaded="Window_Loaded"
+        Closing="Window_Closing">
+  <Grid Background="Transparent" MouseLeftButtonDown="Clock_DragMove">
+    <Canvas x:Name="ClockCanvas" Background="Transparent" />
+    <Grid.ContextMenu>
+      <ContextMenu Opened="Popup_Opened">
+        <MenuItem Header="大きさの変更">
+          <MenuItem x:Name="SizeA" Header="大（300x300）" Click="SizeLarge" />
+          <MenuItem x:Name="SizeB" Header="中（200x200）" Click="SizeMedium" />
+          <MenuItem x:Name="SizeC" Header="小（100x100）" Click="SizeSmall" />
+          <MenuItem Header="その他" Click="SizeOther" />
+        </MenuItem>
+        <MenuItem Header="太さの変更">
+          <MenuItem x:Name="WidthA" Header="太（5px）" Click="WidthThick" />
+          <MenuItem x:Name="WidthB" Header="中（3px）" Click="WidthMedium" />
+          <MenuItem x:Name="WidthC" Header="細（2px）" Click="WidthThin" />
+          <MenuItem Header="その他" Click="WidthOther" />
+        </MenuItem>
+        <MenuItem Header="色の変更" Click="ColorChange" />
+        <Separator />
+        <MenuItem x:Name="Front" Header="最前面に表示する" IsCheckable="True" Click="FrontChange" />
+        <MenuItem x:Name="Sec" Header="秒針を表示する" IsCheckable="True" Click="SecondChange" />
+        <MenuItem x:Name="Scale" Header="目盛りを表示する" IsCheckable="True" Click="ScaleChange" />
+        <Separator />
+        <MenuItem Header="終了" Click="ExitProcess" />
+      </ContextMenu>
+    </Grid.ContextMenu>
+  </Grid>
+</Window>

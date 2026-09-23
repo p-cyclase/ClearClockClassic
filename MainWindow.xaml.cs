@@ -1,0 +1,164 @@
+using System;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Shapes;
+using System.Windows.Threading;
+
+namespace ClearClock;
+
+/// <summary>なでしこ版 ClearClock.nako の手続きを、対応が追える名称で移植する。</summary>
+public partial class MainWindow : Window
+{
+    private const int MinimumSize = 100;
+    private const int MinimumWidth = 2;
+    private readonly DispatcherTimer clockTimer = new() { Interval = TimeSpan.FromSeconds(1) };
+    private string iniPath = string.Empty;
+
+    // なでしこ版の「サイズ」「ウェイト」「カラー」に対応する状態。
+    private int size = 200;
+    private int lineWidth = 3;
+    private Color color = Colors.Black;
+
+    public MainWindow()
+    {
+        InitializeComponent();
+        clockTimer.Tick += ClockLoop;
+    }
+
+    // 初期設定（ClearClock.nako: 3-46行）
+    private void Window_Loaded(object sender, RoutedEventArgs e)
+    {
+        iniPath = System.IO.Path.Combine(AppContext.BaseDirectory, "ClearClock.ini");
+        LoadSettings();
+        CheckAdjustment();
+        DrawFrame();
+        ClockLoop(this, EventArgs.Empty);
+        clockTimer.Start();
+    }
+
+    // 無限ループ（ClearClock.nako: 48-72行）を DispatcherTimer で置き換える。
+    private void ClockLoop(object? sender, EventArgs e)
+    {
+        DrawFrame();
+        var now = DateTime.Now;
+        var center = size / 2d;
+        DrawHand((now.Hour % 12 + now.Minute / 60d) * Math.PI / 6, size * 0.5 / 2, lineWidth, center);
+        DrawHand((now.Minute + now.Second / 60d) * Math.PI / 30, size * 0.7 / 2, lineWidth, center);
+        if (Sec.IsChecked == true)
+            DrawHand(now.Second * Math.PI / 30, size * 0.8 / 2, Math.Max(1, lineWidth - 1), center);
+    }
+
+    // 枠描画（ClearClock.nako: 74-88行）
+    private void DrawFrame()
+    {
+        if (size <= 0) return;
+        Width = size;
+        Height = size;
+        ClockCanvas.Children.Clear();
+        var brush = new SolidColorBrush(color);
+        var halfWidth = Math.Floor(lineWidth / 2d);
+        ClockCanvas.Children.Add(new Ellipse
+        {
+            Width = size - halfWidth * 2,
+            Height = size - halfWidth * 2,
+            Stroke = brush,
+            StrokeThickness = lineWidth,
+        });
+        Canvas.SetLeft(ClockCanvas.Children.OfType<Ellipse>().Last(), halfWidth);
+        Canvas.SetTop(ClockCanvas.Children.OfType<Ellipse>().Last(), halfWidth);
+
+        if (Scale.IsChecked == true)
+        {
+            for (var count = 0; count < 12; count++)
+            {
+                var angle = count * Math.PI / 6;
+                var center = Math.Floor(size / 2d);
+                AddLine(Math.Cos(angle) * (center - lineWidth) + center, Math.Sin(angle) * (center - lineWidth) + center,
+                    Math.Cos(angle) * (size * 0.9 / 2) + center, Math.Sin(angle) * (size * 0.9 / 2) + center, lineWidth, brush);
+            }
+        }
+    }
+
+    private void DrawHand(double angle, double length, double width, double center)
+        => AddLine(center, center, center + Math.Sin(angle) * length, center - Math.Cos(angle) * length, width, new SolidColorBrush(color));
+
+    private void AddLine(double x1, double y1, double x2, double y2, double width, Brush brush)
+        => ClockCanvas.Children.Add(new Line { X1 = x1, Y1 = y1, X2 = x2, Y2 = y2, Stroke = brush, StrokeThickness = width, StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round });
+
+    // サイズ大・中・小・他（ClearClock.nako: 90-123行）
+    private void SizeLarge(object sender, RoutedEventArgs e) { size = 300; CheckAdjustment(); DrawFrame(); }
+    private void SizeMedium(object sender, RoutedEventArgs e) { size = 200; CheckAdjustment(); DrawFrame(); }
+    private void SizeSmall(object sender, RoutedEventArgs e) { size = 100; CheckAdjustment(); DrawFrame(); }
+    private void SizeOther(object sender, RoutedEventArgs e) { if (AskNumber("大きさの変更", "大きさ（100以上）", size, MinimumSize) is int value) size = value; CheckAdjustment(); DrawFrame(); }
+
+    // ウェイト太・中・細・他（ClearClock.nako: 125-158行）
+    private void WidthThick(object sender, RoutedEventArgs e) { lineWidth = 5; CheckAdjustment(); DrawFrame(); }
+    private void WidthMedium(object sender, RoutedEventArgs e) { lineWidth = 3; CheckAdjustment(); DrawFrame(); }
+    private void WidthThin(object sender, RoutedEventArgs e) { lineWidth = 2; CheckAdjustment(); DrawFrame(); }
+    private void WidthOther(object sender, RoutedEventArgs e) { if (AskNumber("太さの変更", "太さ（2以上）", lineWidth, MinimumWidth) is int value) lineWidth = value; CheckAdjustment(); DrawFrame(); }
+
+    // 色変更（ClearClock.nako: 160-166行）
+    private void ColorChange(object sender, RoutedEventArgs e)
+    {
+        using var dialog = new System.Windows.Forms.ColorDialog { Color = System.Drawing.Color.FromArgb(color.A, color.R, color.G, color.B), FullOpen = true };
+        if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
+        color = Color.FromRgb(dialog.Color.R, dialog.Color.G, dialog.Color.B);
+        if (color == Colors.White) color = Color.FromRgb(255, 255, 254); // 旧版と同じ白避け
+        DrawFrame();
+    }
+
+    // 最前面・秒針・目盛り変更（ClearClock.nako: 168-184行）
+    private void FrontChange(object sender, RoutedEventArgs e) { Topmost = Front.IsChecked == true; }
+    private void SecondChange(object sender, RoutedEventArgs e) { }
+    private void ScaleChange(object sender, RoutedEventArgs e) { DrawFrame(); }
+    private void Popup_Opened(object sender, RoutedEventArgs e) => CheckAdjustment();
+
+    // チェック調整（ClearClock.nako: 186-203行）
+    private void CheckAdjustment()
+    {
+        Topmost = Front.IsChecked == true;
+        SizeA.IsCheckable = SizeB.IsCheckable = SizeC.IsCheckable = true;
+        WidthA.IsCheckable = WidthB.IsCheckable = WidthC.IsCheckable = true;
+        SizeA.IsChecked = size == 300; SizeB.IsChecked = size == 200; SizeC.IsChecked = size == 100;
+        WidthA.IsChecked = lineWidth == 5; WidthB.IsChecked = lineWidth == 3; WidthC.IsChecked = lineWidth == 2;
+    }
+
+    // 終了処理（ClearClock.nako: 205-215行）
+    private void ExitProcess(object sender, RoutedEventArgs e) => Close();
+    private void Window_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        clockTimer.Stop();
+        if (!string.IsNullOrEmpty(iniPath))
+            File.WriteAllLines(iniPath, new[] { size.ToString(CultureInfo.InvariantCulture), lineWidth.ToString(CultureInfo.InvariantCulture), $"#{color.R:X2}{color.G:X2}{color.B:X2}", Flag(Front), Flag(Sec), Flag(Scale), Left.ToString(CultureInfo.InvariantCulture), Top.ToString(CultureInfo.InvariantCulture) });
+    }
+
+    private void LoadSettings()
+    {
+        if (!File.Exists(iniPath)) { Front.IsChecked = true; Sec.IsChecked = false; Scale.IsChecked = true; return; }
+        var values = File.ReadAllLines(iniPath);
+        if (values.Length < 6) return;
+        size = ReadInt(values, 0, 200, MinimumSize); lineWidth = ReadInt(values, 1, 3, MinimumWidth);
+        try { color = (Color)ColorConverter.ConvertFromString(values[2])!; } catch { color = Colors.Black; }
+        Front.IsChecked = ReadInt(values, 3, 1, 0) == 1; Sec.IsChecked = ReadInt(values, 4, 0, 0) == 1; Scale.IsChecked = ReadInt(values, 5, 1, 0) == 1;
+        if (values.Length > 7 && double.TryParse(values[6], NumberStyles.Float, CultureInfo.InvariantCulture, out var left) && double.TryParse(values[7], NumberStyles.Float, CultureInfo.InvariantCulture, out var top)) { Left = left; Top = top; }
+    }
+
+    private static int ReadInt(string[] values, int index, int fallback, int minimum) => index < values.Length && int.TryParse(values[index], out var number) ? Math.Max(minimum, number) : fallback;
+    private static string Flag(MenuItem item) => item.IsChecked == true ? "1" : "0";
+    private void Clock_DragMove(object sender, MouseButtonEventArgs e) { if (e.LeftButton == MouseButtonState.Pressed) DragMove(); }
+
+    private static int? AskNumber(string title, string label, int current, int minimum)
+    {
+        var input = new TextBox { Text = current.ToString(CultureInfo.InvariantCulture), Margin = new Thickness(12, 4, 12, 8), MinWidth = 210 };
+        var panel = new StackPanel(); panel.Children.Add(new TextBlock { Text = label, Margin = new Thickness(12, 12, 12, 0) }); panel.Children.Add(input);
+        var dialog = new Window { Title = title, Width = 280, Height = 150, ResizeMode = ResizeMode.NoResize, WindowStartupLocation = WindowStartupLocation.CenterScreen, Content = panel };
+        var ok = new Button { Content = "OK", IsDefault = true, Width = 72, Margin = new Thickness(0, 0, 12, 12), HorizontalAlignment = HorizontalAlignment.Right };
+        ok.Click += (_, _) => dialog.DialogResult = true; panel.Children.Add(ok); input.SelectAll();
+        return dialog.ShowDialog() == true && int.TryParse(input.Text, out var value) && value >= minimum ? value : null;
+    }
+}
