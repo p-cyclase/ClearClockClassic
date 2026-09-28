@@ -116,12 +116,15 @@ public partial class MainWindow : Window
     private void FrontChange(object sender, RoutedEventArgs e) { Topmost = Front.IsChecked == true; }
     private void SecondChange(object sender, RoutedEventArgs e) { }
     private void ScaleChange(object sender, RoutedEventArgs e) { DrawFrame(); }
+    private void AntiAliasChange(object sender, RoutedEventArgs e) { CheckAdjustment(); DrawFrame(); }
     private void Popup_Opened(object sender, RoutedEventArgs e) => CheckAdjustment();
 
     // チェック調整（ClearClock.nako: 186-203行）
     private void CheckAdjustment()
     {
         Topmost = Front.IsChecked == true;
+        RenderOptions.SetEdgeMode(ClockCanvas, AntiAlias.IsChecked == true ? EdgeMode.Unspecified : EdgeMode.Aliased);
+        ClockCanvas.SnapsToDevicePixels = AntiAlias.IsChecked != true;
         SizeA.IsCheckable = SizeB.IsCheckable = SizeC.IsCheckable = true;
         WidthA.IsCheckable = WidthB.IsCheckable = WidthC.IsCheckable = true;
         SizeA.IsChecked = size == 300; SizeB.IsChecked = size == 200; SizeC.IsChecked = size == 100;
@@ -134,18 +137,19 @@ public partial class MainWindow : Window
     {
         clockTimer.Stop();
         if (!string.IsNullOrEmpty(iniPath))
-            File.WriteAllLines(iniPath, new[] { size.ToString(CultureInfo.InvariantCulture), lineWidth.ToString(CultureInfo.InvariantCulture), $"#{color.R:X2}{color.G:X2}{color.B:X2}", Flag(Front), Flag(Sec), Flag(Scale), Left.ToString(CultureInfo.InvariantCulture), Top.ToString(CultureInfo.InvariantCulture) });
+            File.WriteAllLines(iniPath, new[] { size.ToString(CultureInfo.InvariantCulture), lineWidth.ToString(CultureInfo.InvariantCulture), $"#{color.R:X2}{color.G:X2}{color.B:X2}", Flag(Front), Flag(Sec), Flag(Scale), Left.ToString(CultureInfo.InvariantCulture), Top.ToString(CultureInfo.InvariantCulture), Flag(AntiAlias) });
     }
 
     private void LoadSettings()
     {
-        if (!File.Exists(iniPath)) { Front.IsChecked = true; Sec.IsChecked = false; Scale.IsChecked = true; return; }
+        if (!File.Exists(iniPath)) { Front.IsChecked = true; Sec.IsChecked = false; Scale.IsChecked = true; AntiAlias.IsChecked = false; return; }
         var values = File.ReadAllLines(iniPath);
         if (values.Length < 6) return;
         size = ReadInt(values, 0, 200, MinimumSize); lineWidth = ReadInt(values, 1, 3, MinimumWidth);
         color = ReadColor(values[2]);
         Front.IsChecked = ReadInt(values, 3, 1, 0) == 1; Sec.IsChecked = ReadInt(values, 4, 0, 0) == 1; Scale.IsChecked = ReadInt(values, 5, 1, 0) == 1;
         if (values.Length > 7 && double.TryParse(values[6], NumberStyles.Float, CultureInfo.InvariantCulture, out var left) && double.TryParse(values[7], NumberStyles.Float, CultureInfo.InvariantCulture, out var top)) { Left = left; Top = top; }
+        AntiAlias.IsChecked = ReadInt(values, 8, 0, 0) == 1;
     }
 
     private static int ReadInt(string[] values, int index, int fallback, int minimum) => index < values.Length && int.TryParse(values[index], out var number) ? Math.Max(minimum, number) : fallback;

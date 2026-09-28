@@ -30,6 +30,7 @@
         <MenuItem x:Name="Front" Header="最前面に表示する" IsCheckable="True" Click="FrontChange" />
         <MenuItem x:Name="Sec" Header="秒針を表示する" IsCheckable="True" Click="SecondChange" />
         <MenuItem x:Name="Scale" Header="目盛りを表示する" IsCheckable="True" Click="ScaleChange" />
+        <MenuItem x:Name="AntiAlias" Header="アンチエイリアスを有効にする" IsCheckable="True" Click="AntiAliasChange" />
         <Separator />
         <MenuItem Header="終了" Click="ExitProcess" />
       </ContextMenu>
