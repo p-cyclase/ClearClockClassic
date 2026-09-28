@@ -1,4 +1,6 @@
 release/
+.package/
+dist/
 .build/
 .vs/
 *.user

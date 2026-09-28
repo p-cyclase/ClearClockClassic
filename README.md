@@ -32,7 +32,9 @@ GitHub の **Releases** から `ClearClock.exe` をダウンロードして実�
 
 ## 配布するファイル
 
-リリースでは `ClearClock.exe` だけを配布します。これは Windows x64 向けで、必要な .NET ランタイムを同梱した単体実行ファイルです。
+リリースでは `ClearClock-vX.Y.Z-windows-x64.zip` を配布します。ZIP を展開すると専用フォルダが作られ、その中に `ClearClock.exe` と利用者向けの `README.txt` が入っています。
+
+`ClearClock.exe` は Windows x64 向けで、必要な .NET ランタイムを同梱しています。設定ファイル `ClearClock.ini` もこの専用フォルダ内に保存されるため、ほかのファイルと混ざりません。
 
 ## 開発
 
@@ -41,9 +43,10 @@ GitHub の **Releases** から `ClearClock.exe` をダウンロードして実�
 ```powershell
 dotnet run
 dotnet publish -c Release
+.\scripts\package-release.ps1
 ```
 
-公開用 exe は `release/ClearClock.exe` に生成されます。`release/` と `.build/` は生成物のため Git 管理しません。
+公開用 exe は `release/ClearClock.exe` に生成されます。配布用 ZIP は `dist/` に生成されます。`release/`、`dist/`、`.build/` は生成物のため Git 管理しません。
 
 ## ドキュメント
 

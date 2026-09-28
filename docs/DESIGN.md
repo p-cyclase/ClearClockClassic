@@ -13,11 +13,13 @@
 | 実装言語 | C# |
 | UI | WPF（色選択に Windows Forms の標準ダイアログを利用） |
 | 対象 | Windows x64 |
-| 配布物 | `ClearClock.exe` 1ファイル |
+| 配布物 | 専用フォルダを含む ZIP ファイル |
 | ランタイム | .NET ランタイムを exe に同梱 |
 | 外部パッケージ | なし |
 
-`dotnet publish -c Release` は `release/ClearClock.exe` を生成する。通常利用者は GitHub Releases からこの exe だけを入手する。
+`dotnet publish -c Release` は `release/ClearClock.exe` を生成する。`scripts/package-release.ps1` は exe と利用者向け `README.txt` を専用フォルダへまとめ、`dist/ClearClock-vX.Y.Z-windows-x64.zip` を生成する。通常利用者は GitHub Releases からこの ZIP を入手して展開する。
+
+ZIP 内には初期状態の `ClearClock.ini` を含めない。初回終了時に exe と同じ専用フォルダへ生成される。旧版から設定を引き継ぐ利用者は、旧 `ClearClock.ini` をこのフォルダへコピーしてから起動する。
 
 ## 構成
 
