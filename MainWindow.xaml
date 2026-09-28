@@ -1,7 +1,7 @@
 <Window x:Class="ClearClock.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="ClearClock"
+        Title="くりくろくらしっく（ClearClockClassic）"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
