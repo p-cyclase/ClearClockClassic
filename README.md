@@ -64,4 +64,4 @@ dotnet publish -c Release
 
 ## 旧版
 
-親フォルダの `../legacy/` は、当時の配布物を変更せず保管する資料です。特に `legacy/ClearClock.nako` が移植元のソースです。
+`legacy/` は、当時の配布物を変更せず保管する資料です。特に `legacy/ClearClock.nako` が移植元のソースです。
