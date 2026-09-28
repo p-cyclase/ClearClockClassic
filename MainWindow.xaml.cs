@@ -53,6 +53,8 @@ public partial class MainWindow : Window
             DrawHand(now.Second * Math.PI / 30, size * 0.8 / 2, Math.Max(1, lineWidth - 1), center);
     }
 
+    private void RedrawClock() => ClockLoop(this, EventArgs.Empty);
+
     // 枠描画（ClearClock.nako: 74-88行）
     private void DrawFrame()
     {
@@ -91,16 +93,16 @@ public partial class MainWindow : Window
         => ClockCanvas.Children.Add(new Line { X1 = x1, Y1 = y1, X2 = x2, Y2 = y2, Stroke = brush, StrokeThickness = width, StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round });
 
     // サイズ大・中・小・他（ClearClock.nako: 90-123行）
-    private void SizeLarge(object sender, RoutedEventArgs e) { size = 300; CheckAdjustment(); DrawFrame(); }
-    private void SizeMedium(object sender, RoutedEventArgs e) { size = 200; CheckAdjustment(); DrawFrame(); }
-    private void SizeSmall(object sender, RoutedEventArgs e) { size = 100; CheckAdjustment(); DrawFrame(); }
-    private void SizeOther(object sender, RoutedEventArgs e) { if (AskNumber("大きさの変更", "大きさ（100以上）", size, MinimumSize) is int value) size = value; CheckAdjustment(); DrawFrame(); }
+    private void SizeLarge(object sender, RoutedEventArgs e) { size = 300; CheckAdjustment(); RedrawClock(); }
+    private void SizeMedium(object sender, RoutedEventArgs e) { size = 200; CheckAdjustment(); RedrawClock(); }
+    private void SizeSmall(object sender, RoutedEventArgs e) { size = 100; CheckAdjustment(); RedrawClock(); }
+    private void SizeOther(object sender, RoutedEventArgs e) { if (AskNumber("大きさの変更", "大きさ（100以上）", size, MinimumSize) is int value) size = value; CheckAdjustment(); RedrawClock(); }
 
     // ウェイト太・中・細・他（ClearClock.nako: 125-158行）
-    private void WidthThick(object sender, RoutedEventArgs e) { lineWidth = 5; CheckAdjustment(); DrawFrame(); }
-    private void WidthMedium(object sender, RoutedEventArgs e) { lineWidth = 3; CheckAdjustment(); DrawFrame(); }
-    private void WidthThin(object sender, RoutedEventArgs e) { lineWidth = 2; CheckAdjustment(); DrawFrame(); }
-    private void WidthOther(object sender, RoutedEventArgs e) { if (AskNumber("太さの変更", "太さ（2以上）", lineWidth, MinimumWidth) is int value) lineWidth = value; CheckAdjustment(); DrawFrame(); }
+    private void WidthThick(object sender, RoutedEventArgs e) { lineWidth = 5; CheckAdjustment(); RedrawClock(); }
+    private void WidthMedium(object sender, RoutedEventArgs e) { lineWidth = 3; CheckAdjustment(); RedrawClock(); }
+    private void WidthThin(object sender, RoutedEventArgs e) { lineWidth = 2; CheckAdjustment(); RedrawClock(); }
+    private void WidthOther(object sender, RoutedEventArgs e) { if (AskNumber("太さの変更", "太さ（2以上）", lineWidth, MinimumWidth) is int value) lineWidth = value; CheckAdjustment(); RedrawClock(); }
 
     // 色変更（ClearClock.nako: 160-166行）
     private void ColorChange(object sender, RoutedEventArgs e)
@@ -109,14 +111,14 @@ public partial class MainWindow : Window
         if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
         color = Color.FromRgb(dialog.Color.R, dialog.Color.G, dialog.Color.B);
         if (color == Colors.White) color = Color.FromRgb(255, 255, 254); // 旧版と同じ白避け
-        DrawFrame();
+        RedrawClock();
     }
 
     // 最前面・秒針・目盛り変更（ClearClock.nako: 168-184行）
     private void FrontChange(object sender, RoutedEventArgs e) { Topmost = Front.IsChecked == true; }
-    private void SecondChange(object sender, RoutedEventArgs e) { }
-    private void ScaleChange(object sender, RoutedEventArgs e) { DrawFrame(); }
-    private void AntiAliasChange(object sender, RoutedEventArgs e) { CheckAdjustment(); DrawFrame(); }
+    private void SecondChange(object sender, RoutedEventArgs e) { RedrawClock(); }
+    private void ScaleChange(object sender, RoutedEventArgs e) { RedrawClock(); }
+    private void AntiAliasChange(object sender, RoutedEventArgs e) { CheckAdjustment(); RedrawClock(); }
     private void Popup_Opened(object sender, RoutedEventArgs e) => CheckAdjustment();
 
     // チェック調整（ClearClock.nako: 186-203行）
