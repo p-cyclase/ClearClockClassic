@@ -32,6 +32,7 @@
         <MenuItem x:Name="Scale" Header="目盛りを表示する" IsCheckable="True" Click="ScaleChange" />
         <MenuItem x:Name="AntiAlias" Header="アンチエイリアスを有効にする" IsCheckable="True" Click="AntiAliasChange" />
         <Separator />
+        <MenuItem Header="バージョン情報" Click="ShowVersionInfo" />
         <MenuItem Header="終了" Click="ExitProcess" />
       </ContextMenu>
     </Grid.ContextMenu>

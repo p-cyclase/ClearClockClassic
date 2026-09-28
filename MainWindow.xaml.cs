@@ -132,6 +132,12 @@ public partial class MainWindow : Window
     }
 
     // 終了処理（ClearClock.nako: 205-215行）
+    private void ShowVersionInfo(object sender, RoutedEventArgs e)
+    {
+        var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "不明";
+        MessageBox.Show($"くりくろくらしっく（ClearClockClassic）\nバージョン {version}\n\n製作者: p_cyclase\nGitHub: https://github.com/p-cyclase/ClearClockClassic", "バージョン情報", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
     private void ExitProcess(object sender, RoutedEventArgs e) => Close();
     private void Window_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
