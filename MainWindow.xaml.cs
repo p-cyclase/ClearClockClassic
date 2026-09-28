@@ -142,17 +142,38 @@ public partial class MainWindow : Window
 
     private void LoadSettings()
     {
-        if (!File.Exists(iniPath)) { Front.IsChecked = true; Sec.IsChecked = false; Scale.IsChecked = true; AntiAlias.IsChecked = false; return; }
-        var values = File.ReadAllLines(iniPath);
+        ResetSettingsToDefaults();
+        if (!File.Exists(iniPath)) return;
+
+        string[] values;
+        try { values = File.ReadAllLines(iniPath); }
+        catch { return; }
         if (values.Length < 6) return;
         size = ReadInt(values, 0, 200, MinimumSize); lineWidth = ReadInt(values, 1, 3, MinimumWidth);
         color = ReadColor(values[2]);
-        Front.IsChecked = ReadInt(values, 3, 1, 0) == 1; Sec.IsChecked = ReadInt(values, 4, 0, 0) == 1; Scale.IsChecked = ReadInt(values, 5, 1, 0) == 1;
+        Front.IsChecked = ReadFlag(values, 3, true); Sec.IsChecked = ReadFlag(values, 4, false); Scale.IsChecked = ReadFlag(values, 5, true);
         if (values.Length > 7 && double.TryParse(values[6], NumberStyles.Float, CultureInfo.InvariantCulture, out var left) && double.TryParse(values[7], NumberStyles.Float, CultureInfo.InvariantCulture, out var top)) { Left = left; Top = top; }
-        AntiAlias.IsChecked = ReadInt(values, 8, 0, 0) == 1;
+        AntiAlias.IsChecked = ReadFlag(values, 8, false);
     }
 
-    private static int ReadInt(string[] values, int index, int fallback, int minimum) => index < values.Length && int.TryParse(values[index], out var number) ? Math.Max(minimum, number) : fallback;
+    private void ResetSettingsToDefaults()
+    {
+        size = 200;
+        lineWidth = 3;
+        color = Colors.Black;
+        Front.IsChecked = true;
+        Sec.IsChecked = false;
+        Scale.IsChecked = true;
+        AntiAlias.IsChecked = false;
+        Left = double.NaN;
+        Top = double.NaN;
+    }
+
+    private static int ReadInt(string[] values, int index, int fallback, int minimum)
+        => index < values.Length && int.TryParse(values[index], out var number) && number >= minimum ? number : fallback;
+
+    private static bool ReadFlag(string[] values, int index, bool fallback)
+        => index < values.Length && int.TryParse(values[index], out var number) && (number == 0 || number == 1) ? number == 1 : fallback;
 
     // 旧なでしこ版は COLORREF の整数値（例: 16448）を保存する。
     // 現行版は #RRGGBB を保存するが、どちらも読み込めるようにする。
