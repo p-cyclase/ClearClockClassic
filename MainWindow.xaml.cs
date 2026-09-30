@@ -17,6 +17,7 @@ public partial class MainWindow : Window
     private const int MinimumSize = 100;
     private const int MinimumWidth = 2;
     private readonly DispatcherTimer clockTimer = new() { Interval = TimeSpan.FromSeconds(1) };
+    private readonly System.Windows.Forms.NotifyIcon trayIcon;
     private string iniPath = string.Empty;
 
     // なでしこ版の「サイズ」「ウェイト」「カラー」に対応する状態。
@@ -28,6 +29,24 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         clockTimer.Tick += ClockLoop;
+        trayIcon = CreateTrayIcon();
+    }
+
+    private System.Windows.Forms.NotifyIcon CreateTrayIcon()
+    {
+        var menu = new System.Windows.Forms.ContextMenuStrip();
+        menu.Items.Add("表示", null, (_, _) => Dispatcher.BeginInvoke(ShowFromTray));
+        menu.Items.Add("終了", null, (_, _) => Dispatcher.BeginInvoke(Close));
+
+        var icon = new System.Windows.Forms.NotifyIcon
+        {
+            Icon = System.Drawing.SystemIcons.Application,
+            Text = "くりくろくらしっく（ClearClockClassic）",
+            ContextMenuStrip = menu,
+            Visible = true,
+        };
+        icon.DoubleClick += (_, _) => Dispatcher.BeginInvoke(ShowFromTray);
+        return icon;
     }
 
     // 初期設定（ClearClock.nako: 3-46行）
@@ -134,6 +153,15 @@ public partial class MainWindow : Window
     }
 
     // 終了処理（ClearClock.nako: 205-215行）
+    private void HideToTray(object sender, RoutedEventArgs e) => Hide();
+
+    private void ShowFromTray()
+    {
+        Show();
+        WindowState = WindowState.Normal;
+        Activate();
+    }
+
     private void ShowVersionInfo(object sender, RoutedEventArgs e)
     {
         var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "不明";
@@ -144,6 +172,8 @@ public partial class MainWindow : Window
     private void Window_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
         clockTimer.Stop();
+        trayIcon.Visible = false;
+        trayIcon.Dispose();
         if (!string.IsNullOrEmpty(iniPath))
             File.WriteAllLines(iniPath, new[] { size.ToString(CultureInfo.InvariantCulture), lineWidth.ToString(CultureInfo.InvariantCulture), $"#{color.R:X2}{color.G:X2}{color.B:X2}", Flag(Front), Flag(Sec), Flag(Scale), Left.ToString(CultureInfo.InvariantCulture), Top.ToString(CultureInfo.InvariantCulture), Flag(AntiAlias) });
     }

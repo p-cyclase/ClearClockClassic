@@ -6,6 +6,7 @@
         AllowsTransparency="True"
         Background="Transparent"
         ResizeMode="NoResize"
+        ShowInTaskbar="False"
         Topmost="True"
         Loaded="Window_Loaded"
         Closing="Window_Closing">
@@ -32,6 +33,7 @@
         <MenuItem x:Name="Scale" Header="目盛りを表示する" IsCheckable="True" Click="ScaleChange" />
         <MenuItem x:Name="AntiAlias" Header="アンチエイリアスを有効にする" IsCheckable="True" Click="AntiAliasChange" />
         <Separator />
+        <MenuItem Header="通知領域に隠す" Click="HideToTray" />
         <MenuItem Header="バージョン情報" Click="ShowVersionInfo" />
         <MenuItem Header="終了" Click="ExitProcess" />
       </ContextMenu>
