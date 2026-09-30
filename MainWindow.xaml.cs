@@ -40,7 +40,7 @@ public partial class MainWindow : Window
 
         var icon = new System.Windows.Forms.NotifyIcon
         {
-            Icon = System.Drawing.SystemIcons.Application,
+            Icon = System.Drawing.Icon.ExtractAssociatedIcon(Environment.ProcessPath!) ?? System.Drawing.SystemIcons.Application,
             Text = "くりくろくらしっく（ClearClockClassic）",
             ContextMenuStrip = menu,
             Visible = true,

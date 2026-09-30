@@ -10,6 +10,7 @@
     <AssemblyTitle>くりくろくらしっく（ClearClockClassic）</AssemblyTitle>
     <Product>くりくろくらしっく（ClearClockClassic）</Product>
     <Version>0.2.0</Version>
+    <ApplicationIcon>assets\ClearClock.ico</ApplicationIcon>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
