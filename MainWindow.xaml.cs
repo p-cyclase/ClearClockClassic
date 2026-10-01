@@ -123,13 +123,12 @@ public partial class MainWindow : Window
     private void WidthThin(object sender, RoutedEventArgs e) { lineWidth = 2; CheckAdjustment(); RedrawClock(); }
     private void WidthOther(object sender, RoutedEventArgs e) { if (AskNumber("太さの変更", "太さ（2以上）", lineWidth, MinimumWidth) is int value) lineWidth = value; CheckAdjustment(); RedrawClock(); }
 
-    // 色変更（ClearClock.nako: 160-166行）
+    // 色変更
     private void ColorChange(object sender, RoutedEventArgs e)
     {
-        using var dialog = new System.Windows.Forms.ColorDialog { Color = System.Drawing.Color.FromArgb(color.A, color.R, color.G, color.B), FullOpen = true };
-        if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
-        color = Color.FromRgb(dialog.Color.R, dialog.Color.G, dialog.Color.B);
-        if (color == Colors.White) color = Color.FromRgb(255, 255, 254); // 旧版と同じ白避け
+        var dialog = new ColorDialogWindow(color) { Owner = this };
+        if (dialog.ShowDialog() != true) return;
+        color = dialog.SelectedColor;
         RedrawClock();
     }
 
