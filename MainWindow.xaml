@@ -27,9 +27,10 @@
           <MenuItem Header="その他" Click="WidthOther" />
         </MenuItem>
         <MenuItem Header="色の設定" Click="ColorSettings" />
-        <MenuItem Header="アラーム">
-          <MenuItem Header="アラームを設定..." Click="AlarmSet" />
-          <MenuItem x:Name="AlarmClear" Header="アラームを解除" Click="AlarmClearClick" />
+        <MenuItem Header="アラーム／ポモドーロ">
+          <MenuItem Header="アラーム設定" Click="AlarmSet" />
+          <MenuItem x:Name="PomodoroStart" Header="ポモドーロ開始" Click="PomodoroStartClick" />
+          <MenuItem x:Name="TimeFeatureClear" Header="アラーム／ポモドーロ解除" Click="TimeFeatureClearClick" />
         </MenuItem>
         <Separator />
         <MenuItem x:Name="Front" Header="最前面に表示する" IsCheckable="True" Click="FrontChange" />

@@ -14,6 +14,8 @@ namespace ClearClock;
 /// <summary>なでしこ版 ClearClock.nako の手続きを、対応が追える名称で移植する。</summary>
 public partial class MainWindow : Window
 {
+    private enum PomodoroPhase { Stopped, Work, Break }
+
     private const int MinimumSize = 100;
     private const int MinimumWidth = 2;
     private readonly DispatcherTimer clockTimer = new() { Interval = TimeSpan.FromSeconds(1) };
@@ -28,8 +30,10 @@ public partial class MainWindow : Window
     private int? alarmHour;
     private int? alarmMinute;
     private bool alarmNotifying;
+    private PomodoroPhase pomodoroPhase;
+    private DateTime pomodoroStartedAt;
 
-    private Color DrawingColor => alarmNotifying ? notificationColor : color;
+    private Color DrawingColor => alarmNotifying || pomodoroPhase == PomodoroPhase.Break ? notificationColor : color;
 
     public MainWindow()
     {
@@ -70,7 +74,8 @@ public partial class MainWindow : Window
     private void ClockLoop(object? sender, EventArgs e)
     {
         var now = DateTime.Now;
-        CheckAlarm(now);
+        if (pomodoroPhase == PomodoroPhase.Stopped) CheckAlarm(now);
+        else UpdatePomodoro(now);
         DrawFrame();
         var center = size / 2d;
         DrawHand((now.Hour % 12 + now.Minute / 60d) * Math.PI / 6, size * 0.5 / 2, lineWidth, center);
@@ -145,6 +150,7 @@ public partial class MainWindow : Window
         var now = DateTime.Now;
         var dialog = new AlarmDialogWindow(alarmHour ?? now.Hour, alarmMinute ?? now.Minute) { Owner = this };
         if (dialog.ShowDialog() != true) return;
+        StopPomodoro();
         alarmHour = dialog.Hour;
         alarmMinute = dialog.Minute;
         alarmNotifying = false;
@@ -152,9 +158,20 @@ public partial class MainWindow : Window
         RedrawClock();
     }
 
-    private void AlarmClearClick(object sender, RoutedEventArgs e)
+    private void PomodoroStartClick(object sender, RoutedEventArgs e)
     {
         DisableAlarm();
+        pomodoroStartedAt = DateTime.Now;
+        pomodoroPhase = PomodoroPhase.Work;
+        PlayNotificationSound("start.wav");
+        CheckAdjustment();
+        RedrawClock();
+    }
+
+    private void TimeFeatureClearClick(object sender, RoutedEventArgs e)
+    {
+        DisableAlarm();
+        StopPomodoro();
         CheckAdjustment();
         RedrawClock();
     }
@@ -184,7 +201,8 @@ public partial class MainWindow : Window
         WidthA.IsCheckable = WidthB.IsCheckable = WidthC.IsCheckable = true;
         SizeA.IsChecked = size == 300; SizeB.IsChecked = size == 200; SizeC.IsChecked = size == 100;
         WidthA.IsChecked = lineWidth == 5; WidthB.IsChecked = lineWidth == 3; WidthC.IsChecked = lineWidth == 2;
-        AlarmClear.IsEnabled = alarmHour.HasValue;
+        PomodoroStart.IsEnabled = pomodoroPhase == PomodoroPhase.Stopped;
+        TimeFeatureClear.IsEnabled = alarmHour.HasValue || pomodoroPhase != PomodoroPhase.Stopped;
     }
 
     // 終了処理（ClearClock.nako: 205-215行）
@@ -240,6 +258,8 @@ public partial class MainWindow : Window
         alarmHour = null;
         alarmMinute = null;
         alarmNotifying = false;
+        pomodoroPhase = PomodoroPhase.Stopped;
+        pomodoroStartedAt = default;
         Front.IsChecked = true;
         Sec.IsChecked = false;
         Scale.IsChecked = true;
@@ -291,6 +311,7 @@ public partial class MainWindow : Window
         if (alarmNotifying || alarmHour != now.Hour || alarmMinute != now.Minute) return;
         alarmNotifying = true;
         PlayNotificationSound("alarm.wav");
+        ShowClockForNotification();
     }
 
     private void DisableAlarm()
@@ -298,6 +319,28 @@ public partial class MainWindow : Window
         alarmHour = null;
         alarmMinute = null;
         alarmNotifying = false;
+    }
+
+    private void UpdatePomodoro(DateTime now)
+    {
+        var elapsedMinutes = (now - pomodoroStartedAt).TotalMinutes;
+        var phase = elapsedMinutes % 30d < 25d ? PomodoroPhase.Work : PomodoroPhase.Break;
+        if (phase == pomodoroPhase) return;
+
+        pomodoroPhase = phase;
+        PlayNotificationSound(phase == PomodoroPhase.Work ? "start.wav" : "goal.wav");
+        ShowClockForNotification();
+    }
+
+    private void StopPomodoro()
+    {
+        pomodoroPhase = PomodoroPhase.Stopped;
+        pomodoroStartedAt = default;
+    }
+
+    private void ShowClockForNotification()
+    {
+        if (!IsVisible) ShowFromTray();
     }
 
     private static void PlayNotificationSound(string fileName)
