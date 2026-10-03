@@ -26,7 +26,11 @@
           <MenuItem x:Name="WidthC" Header="細（2px）" Click="WidthThin" />
           <MenuItem Header="その他" Click="WidthOther" />
         </MenuItem>
-        <MenuItem Header="色の変更" Click="ColorChange" />
+        <MenuItem Header="色の設定" Click="ColorSettings" />
+        <MenuItem Header="アラーム">
+          <MenuItem Header="アラームを設定..." Click="AlarmSet" />
+          <MenuItem x:Name="AlarmClear" Header="アラームを解除" Click="AlarmClearClick" />
+        </MenuItem>
         <Separator />
         <MenuItem x:Name="Front" Header="最前面に表示する" IsCheckable="True" Click="FrontChange" />
         <MenuItem x:Name="Sec" Header="秒針を表示する" IsCheckable="True" Click="SecondChange" />

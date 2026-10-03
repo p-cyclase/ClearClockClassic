@@ -24,6 +24,12 @@ public partial class MainWindow : Window
     private int size = 200;
     private int lineWidth = 3;
     private Color color = Colors.Black;
+    private Color notificationColor = Colors.Black;
+    private int? alarmHour;
+    private int? alarmMinute;
+    private bool alarmNotifying;
+
+    private Color DrawingColor => alarmNotifying ? notificationColor : color;
 
     public MainWindow()
     {
@@ -63,8 +69,9 @@ public partial class MainWindow : Window
     // 無限ループ（ClearClock.nako: 48-72行）を DispatcherTimer で置き換える。
     private void ClockLoop(object? sender, EventArgs e)
     {
-        DrawFrame();
         var now = DateTime.Now;
+        CheckAlarm(now);
+        DrawFrame();
         var center = size / 2d;
         DrawHand((now.Hour % 12 + now.Minute / 60d) * Math.PI / 6, size * 0.5 / 2, lineWidth, center);
         DrawHand((now.Minute + now.Second / 60d) * Math.PI / 30, size * 0.7 / 2, lineWidth, center);
@@ -81,7 +88,7 @@ public partial class MainWindow : Window
         Width = size;
         Height = size;
         ClockCanvas.Children.Clear();
-        var brush = new SolidColorBrush(color);
+        var brush = new SolidColorBrush(DrawingColor);
         var halfWidth = Math.Floor(lineWidth / 2d);
         ClockCanvas.Children.Add(new Ellipse
         {
@@ -106,7 +113,7 @@ public partial class MainWindow : Window
     }
 
     private void DrawHand(double angle, double length, double width, double center)
-        => AddLine(center, center, center + Math.Sin(angle) * length, center - Math.Cos(angle) * length, width, new SolidColorBrush(color));
+        => AddLine(center, center, center + Math.Sin(angle) * length, center - Math.Cos(angle) * length, width, new SolidColorBrush(DrawingColor));
 
     private void AddLine(double x1, double y1, double x2, double y2, double width, Brush brush)
         => ClockCanvas.Children.Add(new Line { X1 = x1, Y1 = y1, X2 = x2, Y2 = y2, Stroke = brush, StrokeThickness = width, StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round });
@@ -123,12 +130,32 @@ public partial class MainWindow : Window
     private void WidthThin(object sender, RoutedEventArgs e) { lineWidth = 2; CheckAdjustment(); RedrawClock(); }
     private void WidthOther(object sender, RoutedEventArgs e) { if (AskNumber("太さの変更", "太さ（2以上）", lineWidth, MinimumWidth) is int value) lineWidth = value; CheckAdjustment(); RedrawClock(); }
 
-    // 色変更
-    private void ColorChange(object sender, RoutedEventArgs e)
+    // 色設定
+    private void ColorSettings(object sender, RoutedEventArgs e)
     {
-        var dialog = new ColorDialogWindow(color) { Owner = this };
+        var dialog = new ColorSettingsWindow(color, notificationColor) { Owner = this };
         if (dialog.ShowDialog() != true) return;
-        color = dialog.SelectedColor;
+        color = dialog.NormalColor;
+        notificationColor = dialog.NotificationColor;
+        RedrawClock();
+    }
+
+    private void AlarmSet(object sender, RoutedEventArgs e)
+    {
+        var now = DateTime.Now;
+        var dialog = new AlarmDialogWindow(alarmHour ?? now.Hour, alarmMinute ?? now.Minute) { Owner = this };
+        if (dialog.ShowDialog() != true) return;
+        alarmHour = dialog.Hour;
+        alarmMinute = dialog.Minute;
+        alarmNotifying = false;
+        CheckAdjustment();
+        RedrawClock();
+    }
+
+    private void AlarmClearClick(object sender, RoutedEventArgs e)
+    {
+        DisableAlarm();
+        CheckAdjustment();
         RedrawClock();
     }
 
@@ -137,7 +164,15 @@ public partial class MainWindow : Window
     private void SecondChange(object sender, RoutedEventArgs e) { RedrawClock(); }
     private void ScaleChange(object sender, RoutedEventArgs e) { RedrawClock(); }
     private void AntiAliasChange(object sender, RoutedEventArgs e) { CheckAdjustment(); RedrawClock(); }
-    private void Popup_Opened(object sender, RoutedEventArgs e) => CheckAdjustment();
+    private void Popup_Opened(object sender, RoutedEventArgs e)
+    {
+        if (alarmNotifying)
+        {
+            DisableAlarm();
+            RedrawClock();
+        }
+        CheckAdjustment();
+    }
 
     // チェック調整（ClearClock.nako: 186-203行）
     private void CheckAdjustment()
@@ -149,6 +184,7 @@ public partial class MainWindow : Window
         WidthA.IsCheckable = WidthB.IsCheckable = WidthC.IsCheckable = true;
         SizeA.IsChecked = size == 300; SizeB.IsChecked = size == 200; SizeC.IsChecked = size == 100;
         WidthA.IsChecked = lineWidth == 5; WidthB.IsChecked = lineWidth == 3; WidthC.IsChecked = lineWidth == 2;
+        AlarmClear.IsEnabled = alarmHour.HasValue;
     }
 
     // 終了処理（ClearClock.nako: 205-215行）
@@ -174,7 +210,7 @@ public partial class MainWindow : Window
         trayIcon.Visible = false;
         trayIcon.Dispose();
         if (!string.IsNullOrEmpty(iniPath))
-            File.WriteAllLines(iniPath, new[] { size.ToString(CultureInfo.InvariantCulture), lineWidth.ToString(CultureInfo.InvariantCulture), $"#{color.R:X2}{color.G:X2}{color.B:X2}", Flag(Front), Flag(Sec), Flag(Scale), Left.ToString(CultureInfo.InvariantCulture), Top.ToString(CultureInfo.InvariantCulture), Flag(AntiAlias) });
+            File.WriteAllLines(iniPath, new[] { size.ToString(CultureInfo.InvariantCulture), lineWidth.ToString(CultureInfo.InvariantCulture), $"#{color.R:X2}{color.G:X2}{color.B:X2}", Flag(Front), Flag(Sec), Flag(Scale), Left.ToString(CultureInfo.InvariantCulture), Top.ToString(CultureInfo.InvariantCulture), Flag(AntiAlias), $"#{notificationColor.R:X2}{notificationColor.G:X2}{notificationColor.B:X2}" });
     }
 
     private void LoadSettings()
@@ -191,6 +227,8 @@ public partial class MainWindow : Window
         Front.IsChecked = ReadFlag(values, 3, true); Sec.IsChecked = ReadFlag(values, 4, false); Scale.IsChecked = ReadFlag(values, 5, true);
         if (values.Length > 7 && double.TryParse(values[6], NumberStyles.Float, CultureInfo.InvariantCulture, out var left) && double.TryParse(values[7], NumberStyles.Float, CultureInfo.InvariantCulture, out var top)) { Left = left; Top = top; }
         AntiAlias.IsChecked = ReadFlag(values, 8, false);
+        if (values.Length > 11 && TryReadAlarmTime(values[9], values[10], out _, out _)) notificationColor = ReadColor(values[11]);
+        else if (values.Length > 9) notificationColor = ReadColor(values[9]);
     }
 
     private void ResetSettingsToDefaults()
@@ -198,6 +236,10 @@ public partial class MainWindow : Window
         size = 200;
         lineWidth = 3;
         color = Colors.Black;
+        notificationColor = Colors.Black;
+        alarmHour = null;
+        alarmMinute = null;
+        alarmNotifying = false;
         Front.IsChecked = true;
         Sec.IsChecked = false;
         Scale.IsChecked = true;
@@ -212,6 +254,14 @@ public partial class MainWindow : Window
     private static bool ReadFlag(string[] values, int index, bool fallback)
         => index < values.Length && int.TryParse(values[index], out var number) && (number == 0 || number == 1) ? number == 1 : fallback;
 
+    private static bool TryReadAlarmTime(string hourText, string minuteText, out int hour, out int minute)
+    {
+        hour = 0;
+        minute = 0;
+        return int.TryParse(hourText, NumberStyles.Integer, CultureInfo.InvariantCulture, out hour) && hour is >= 0 and <= 23
+            && int.TryParse(minuteText, NumberStyles.Integer, CultureInfo.InvariantCulture, out minute) && minute is >= 0 and <= 59;
+    }
+
     // 旧なでしこ版は COLORREF の整数値（例: 16448）を保存する。
     // 現行版は #RRGGBB を保存するが、どちらも読み込めるようにする。
     private static Color ReadColor(string value)
@@ -224,7 +274,41 @@ public partial class MainWindow : Window
     }
 
     private static string Flag(MenuItem item) => item.IsChecked == true ? "1" : "0";
-    private void Clock_DragMove(object sender, MouseButtonEventArgs e) { if (e.LeftButton == MouseButtonState.Pressed) DragMove(); }
+    private void Clock_DragMove(object sender, MouseButtonEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed) return;
+        if (alarmNotifying)
+        {
+            DisableAlarm();
+            CheckAdjustment();
+            RedrawClock();
+        }
+        DragMove();
+    }
+
+    private void CheckAlarm(DateTime now)
+    {
+        if (alarmNotifying || alarmHour != now.Hour || alarmMinute != now.Minute) return;
+        alarmNotifying = true;
+        PlayNotificationSound("alarm.wav");
+    }
+
+    private void DisableAlarm()
+    {
+        alarmHour = null;
+        alarmMinute = null;
+        alarmNotifying = false;
+    }
+
+    private static void PlayNotificationSound(string fileName)
+    {
+        try
+        {
+            var soundPath = System.IO.Path.Combine(AppContext.BaseDirectory, "sounds", fileName);
+            if (File.Exists(soundPath)) new System.Media.SoundPlayer(soundPath).Play();
+        }
+        catch { }
+    }
 
     private static int? AskNumber(string title, string label, int current, int minimum)
     {

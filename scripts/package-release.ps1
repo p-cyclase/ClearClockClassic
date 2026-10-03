@@ -33,6 +33,7 @@ New-Item -ItemType Directory -Path $distributionDirectory -Force | Out-Null
 
 Copy-Item -LiteralPath (Join-Path $releaseDirectory "ClearClock.exe") -Destination $packageFolder
 Copy-Item -LiteralPath $readme -Destination $packageFolder
+Copy-Item -LiteralPath (Join-Path $releaseDirectory "sounds") -Destination (Join-Path $packageFolder "sounds") -Recurse
 Compress-Archive -Path $packageFolder -DestinationPath $archive
 
 Write-Host "配布用 ZIP を生成しました: $archive"
