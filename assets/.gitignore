@@ -1,0 +1,9 @@
+# 配布しない素材の作業場所
+work/
+
+# OS・編集ツールが作成する一時ファイル
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.tmp
+*.bak
