@@ -107,12 +107,17 @@ public partial class MainWindow : Window
 
         if (Scale.IsChecked == true)
         {
+            // 目盛りは枠線の内側から伸ばす。長さを線幅に依存させると、太線で枠に埋もれるため、
+            // 時計の大きさを基準にしつつ、線幅の2倍以上を確保する。
+            var center = Math.Floor(size / 2d);
+            var tickOuterRadius = center - lineWidth;
+            var tickLength = Math.Max(size * 0.05, lineWidth * 2d);
+            var tickInnerRadius = Math.Max(0, tickOuterRadius - tickLength);
             for (var count = 0; count < 12; count++)
             {
                 var angle = count * Math.PI / 6;
-                var center = Math.Floor(size / 2d);
-                AddLine(Math.Cos(angle) * (center - lineWidth) + center, Math.Sin(angle) * (center - lineWidth) + center,
-                    Math.Cos(angle) * (size * 0.9 / 2) + center, Math.Sin(angle) * (size * 0.9 / 2) + center, lineWidth, brush);
+                AddLine(Math.Cos(angle) * tickOuterRadius + center, Math.Sin(angle) * tickOuterRadius + center,
+                    Math.Cos(angle) * tickInnerRadius + center, Math.Sin(angle) * tickInnerRadius + center, lineWidth, brush);
             }
         }
     }
