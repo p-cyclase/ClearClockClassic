@@ -26,7 +26,7 @@ public partial class MainWindow : Window
     private int size = 200;
     private int lineWidth = 3;
     private Color color = Colors.Black;
-    private Color notificationColor = Colors.Black;
+    private Color notificationColor = Colors.Red;
     private int? alarmHour;
     private int? alarmMinute;
     private bool alarmNotifying;
@@ -250,8 +250,8 @@ public partial class MainWindow : Window
         Front.IsChecked = ReadFlag(values, 3, true); Sec.IsChecked = ReadFlag(values, 4, false); Scale.IsChecked = ReadFlag(values, 5, true);
         if (values.Length > 7 && double.TryParse(values[6], NumberStyles.Float, CultureInfo.InvariantCulture, out var left) && double.TryParse(values[7], NumberStyles.Float, CultureInfo.InvariantCulture, out var top)) { Left = left; Top = top; }
         AntiAlias.IsChecked = ReadFlag(values, 8, false);
-        if (values.Length > 11 && TryReadAlarmTime(values[9], values[10], out _, out _)) notificationColor = ReadColor(values[11]);
-        else if (values.Length > 9) notificationColor = ReadColor(values[9]);
+        if (values.Length > 11 && TryReadAlarmTime(values[9], values[10], out _, out _)) notificationColor = ReadColor(values[11], Colors.Red);
+        else if (values.Length > 9) notificationColor = ReadColor(values[9], Colors.Red);
     }
 
     private void ResetSettingsToDefaults()
@@ -259,7 +259,7 @@ public partial class MainWindow : Window
         size = 200;
         lineWidth = 3;
         color = Colors.Black;
-        notificationColor = Colors.Black;
+        notificationColor = Colors.Red;
         alarmHour = null;
         alarmMinute = null;
         alarmNotifying = false;
@@ -289,13 +289,15 @@ public partial class MainWindow : Window
 
     // 旧なでしこ版は COLORREF の整数値（例: 16448）を保存する。
     // 現行版は #RRGGBB を保存するが、どちらも読み込めるようにする。
-    private static Color ReadColor(string value)
+    private static Color ReadColor(string value) => ReadColor(value, Colors.Black);
+
+    private static Color ReadColor(string value, Color fallback)
     {
         if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var legacyColor))
             return Color.FromRgb((byte)(legacyColor & 0xFF), (byte)((legacyColor >> 8) & 0xFF), (byte)((legacyColor >> 16) & 0xFF));
 
         try { return (Color)ColorConverter.ConvertFromString(value)!; }
-        catch { return Colors.Black; }
+        catch { return fallback; }
     }
 
     private static string Flag(MenuItem item) => item.IsChecked == true ? "1" : "0";
