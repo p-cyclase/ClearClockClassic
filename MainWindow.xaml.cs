@@ -206,8 +206,18 @@ public partial class MainWindow : Window
         WidthA.IsCheckable = WidthB.IsCheckable = WidthC.IsCheckable = true;
         SizeA.IsChecked = size == 300; SizeB.IsChecked = size == 200; SizeC.IsChecked = size == 100;
         WidthA.IsChecked = lineWidth == 5; WidthB.IsChecked = lineWidth == 3; WidthC.IsChecked = lineWidth == 2;
-        PomodoroStart.IsEnabled = pomodoroPhase == PomodoroPhase.Stopped;
-        TimeFeatureClear.IsEnabled = alarmHour.HasValue || pomodoroPhase != PomodoroPhase.Stopped;
+
+        var pomodoroActive = pomodoroPhase != PomodoroPhase.Stopped;
+        var alarmSet = alarmHour.HasValue;
+        AlarmSetMenu.Visibility = pomodoroActive ? Visibility.Collapsed : Visibility.Visible;
+        AlarmSetMenu.Header = alarmSet ? $"アラーム設定（{alarmHour:00}:{alarmMinute:00}）" : "アラーム設定";
+
+        PomodoroStart.Visibility = !alarmSet && !pomodoroActive ? Visibility.Visible : Visibility.Collapsed;
+        PomodoroStatus.Visibility = pomodoroActive ? Visibility.Visible : Visibility.Collapsed;
+        PomodoroStatus.Header = pomodoroPhase == PomodoroPhase.Work ? "ポモドーロ：作業中" : "ポモドーロ：休憩中";
+
+        TimeFeatureClear.Visibility = alarmSet || pomodoroActive ? Visibility.Visible : Visibility.Collapsed;
+        TimeFeatureClear.Header = alarmSet ? "アラームを解除" : "ポモドーロを停止";
     }
 
     // 終了処理（ClearClock.nako: 205-215行）
@@ -335,6 +345,7 @@ public partial class MainWindow : Window
         if (phase == pomodoroPhase) return;
 
         pomodoroPhase = phase;
+        CheckAdjustment();
         PlayNotificationSound(phase == PomodoroPhase.Work ? "start.wav" : "goal.wav");
         ShowClockForNotification();
     }
