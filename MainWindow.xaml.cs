@@ -153,7 +153,8 @@ public partial class MainWindow : Window
     private void AlarmSet(object sender, RoutedEventArgs e)
     {
         var now = DateTime.Now;
-        var dialog = new AlarmDialogWindow(alarmHour ?? now.Hour, alarmMinute ?? now.Minute) { Owner = this };
+        var defaultTime = now.AddMinutes(3);
+        var dialog = new AlarmDialogWindow(alarmHour ?? defaultTime.Hour, alarmMinute ?? defaultTime.Minute) { Owner = this };
         if (dialog.ShowDialog() != true) return;
         StopPomodoro();
         alarmHour = dialog.Hour;
